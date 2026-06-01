@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer');
 
-// ========== KONFIGURASI 10 AKUN EMAIL (GANTI DENGAN AKUN ASLI ANDA) ==========
+// ========== GANTI DENGAN 10 EMAIL DAN APP PASSWORD ASLI ANDA ==========
 const SENDER_ACCOUNTS = [
         { email: "rizkyramadhani060601@mail.com", password: "erye kpwt wwah cujm" },
         { email: "fianajah080801@mail.com", password: "qsmd lfda fswn uewy" },
@@ -12,22 +12,21 @@ const SENDER_ACCOUNTS = [
         { email: "akuunn1001@mail.com", password: "vrng wowp cvxr zgxz" },
         { email: "akuunn2001@mail.com", password: "qwvw ppmk qslk bcpi" },
         { email: "rimada060606@mail.com", password: "jhzi cmyg euob gxtd" }
-    ];
-// Konfigurasi SMTP Gmail (bisa diganti dengan provider lain)
+];
+
 const getTransporter = (email, password) => {
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
         secure: false,
-        auth: { user: email, pass: password },
-        tls: { rejectUnauthorized: false }
+        auth: { user: email, pass: password }
     });
 };
 
 module.exports = async (req, res) => {
-    // CORS
+    // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
     if (req.method === 'OPTIONS') {
@@ -53,14 +52,13 @@ module.exports = async (req, res) => {
         const transporter = getTransporter(sender.email, sender.password);
         
         const mailOptions = {
-            from: `"Lamaran Pekerjaan" <${sender.email}>`,
+            from: `"Lamaran Kerja" <${sender.email}>`,
             to: targetEmail,
             subject: subject,
             text: message,
             html: message.replace(/\n/g, '<br>')
         };
         
-        // Tambahkan attachment jika ada CV
         if (cvBase64 && cvFilename) {
             mailOptions.attachments = [{
                 filename: cvFilename,
@@ -77,7 +75,7 @@ module.exports = async (req, res) => {
         });
         
     } catch (error) {
-        console.error(`Error sending from ${sender.email}:`, error);
+        console.error(`Error:`, error);
         return res.status(500).json({ 
             success: false, 
             error: error.message 
