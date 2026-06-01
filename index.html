@@ -39,19 +39,11 @@
         <input type="text" id="subject" placeholder="Lamaran Pekerjaan" value="produksi">
         
         <label>📄 Isi Email</label>
-        <textarea id="message" rows="4" placeholder="Isi email lamaran...">Yth. HRD Manager
-NAMA PT
-Di Tempat
+        <textarea id="message" rows="4" placeholder="Isi email lamaran...">Kepada Yth. HRD,
 
-Berdasarkan informasi yang saya peroleh bahwa perusahaan Bapak/Ibu sedang membuka lowongan pekerjaan, dengan ini saya mengajukan lamaran untuk mengisi posisi yang kosong tersebut.
+Saya mengajukan lamaran untuk posisi yang tersedia. Terlampir CV saya.
 
-Untuk berkas dan dokumen kelengkapannya sudah saya lampirkan bersamaan dengan surel ini.
-
-Besar harapan saya untuk bisa diterima dan bekerja di perusahaan yang Bapak/Ibu pimpin. Atas perhatiannya saya sampaikan terimakasih
-
-Hormat saya
-
-Moch. Rizki Ramadhani</textarea>
+Terima kasih.</textarea>
         
         <label>🗓️ Kirim 10 email dalam berapa hari?</label>
         <select id="totalDays">
@@ -60,7 +52,7 @@ Moch. Rizki Ramadhani</textarea>
             <option value="3">3 hari (merata 72 jam)</option>
         </select>
         
-        <button id="sendBtn" class="send-btn">🚀 KIRIM LAMARAN (EMAIL NYATA)</button>
+        <button id="sendBtn">🚀 KIRIM LAMARAN (EMAIL NYATA)</button>
     </div>
 
     <div class="card">
@@ -71,14 +63,13 @@ Moch. Rizki Ramadhani</textarea>
     <div class="info">
         <span class="badge">✅ READY TO DEPLOY</span><br>
         <strong>Cara Setup:</strong><br>
-        1. Ganti 10 email pengirim di file <code>api/send-email.js</code> (baris SENDER_ACCOUNTS)<br>
-        2. Ganti SMTP password dengan App Password dari Gmail<br>
-        3. Upload ke GitHub → Deploy ke Vercel → Selesai!
+        1. Ganti 10 email pengirim di file <code>api/send-email.js</code><br>
+        2. Ganti App Password dari masing-masing Gmail<br>
+        3. Upload ke GitHub → Deploy ke Vercel
     </div>
 </div>
 
 <script>
-    const API_URL = '/api/send-email';
     let activeTimeouts = [];
     let isSending = false;
 
@@ -146,7 +137,6 @@ Moch. Rizki Ramadhani</textarea>
             addLog(`✅ CV siap: ${cvFilename}`, "success");
         }
 
-        // Bersihkan timeout lama
         for (let t of activeTimeouts) clearTimeout(t);
         activeTimeouts = [];
         clearLog();
@@ -175,7 +165,7 @@ Moch. Rizki Ramadhani</textarea>
                 addLog(`📤 [${i+1}/10] Mengirim email...`, "info");
                 
                 try {
-                    const response = await fetch(API_URL, {
+                    const response = await fetch('/api/send-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
