@@ -1,0 +1,9 @@
+{
+  "name": "email-mass-sender",
+  "version": "1.0.0",
+  "description": "Kirim lamaran massal dengan 10 akun email",
+  "main": "api/send-email.js",
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}
