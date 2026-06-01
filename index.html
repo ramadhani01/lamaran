@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirim Lamaran Massal - REAL EMAIL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui; }
+        body { background: #eef2f7; padding: 24px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card { background: white; border-radius: 24px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { margin-bottom: 20px; color: #1e7a6e; }
+        label { font-weight: 600; display: block; margin: 12px 0 6px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 12px; margin-bottom: 8px; }
+        button { background: #1b6e5c; color: white; padding: 14px; border: none; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 16px; }
+        button:hover { background: #0f5547; }
+        button:disabled { background: #999; cursor: not-allowed; }
+        .log-area { background: #0a1e22; color: #9bffcf; padding: 16px; border-radius: 16px; height: 350px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+        .log-entry { padding: 6px 0; border-bottom: 1px solid #2a4a52; }
+        .info { background: #e0f0ec; padding: 12px; border-radius: 12px; margin: 16px 0; font-size: 13px; }
+        .badge { background: #1e7a6e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>📧 KIRIM LAMARAN MASAL (REAL EMAIL)</h2>
+        <p>Mengirim 10 email dengan 10 akun berbeda, dijadwalkan merata sesuai hari pilihan</p>
+    </div>
+
+    <div class="card">
+        <label>📬 Email Tujuan (HRD)</label>
+        <input type="email" id="targetEmail" placeholder="hrd@perusahaan.com" value="vvipke11@gmail.com">
+        
+        <label>📎 Upload CV (PDF/DOC/DOCX)</label>
+        <input type="file" id="cvFile" accept=".pdf,.doc,.docx">
+        
+        <label>📌 Subject / Posisi</label>
+        <input type="text" id="subject" placeholder="Lamaran Pekerjaan" value="produksi">
+        
+        <label>📄 Isi Email</label>
+        <textarea id="message" rows="4" placeholder="Isi email lamaran...">Yth. HRD Manager
+NAMA PT
+Di Tempat
+
+Berdasarkan informasi yang saya peroleh bahwa perusahaan Bapak/Ibu sedang membuka lowongan pekerjaan, dengan ini saya mengajukan lamaran untuk mengisi posisi yang kosong tersebut.
+
+Untuk berkas dan dokumen kelengkapannya sudah saya lampirkan bersamaan dengan surel ini.
+
+Besar harapan saya untuk bisa diterima dan bekerja di perusahaan yang Bapak/Ibu pimpin. Atas perhatiannya saya sampaikan terimakasih
+
+Hormat saya
+
+Moch. Rizki Ramadhani</textarea>
+        
+        <label>🗓️ Kirim 10 email dalam berapa hari?</label>
+        <select id="totalDays">
+            <option value="1">1 hari (merata 24 jam)</option>
+            <option value="2" selected>2 hari (merata 48 jam)</option>
+            <option value="3">3 hari (merata 72 jam)</option>
+        </select>
+        
+        <button id="sendBtn" class="send-btn">🚀 KIRIM LAMARAN (EMAIL NYATA)</button>
+    </div>
+
+    <div class="card">
+        <h3>📋 Log Pengiriman</h3>
+        <div class="log-area" id="log"></div>
+    </div>
+
+    <div class="info">
+        <span class="badge">✅ READY TO DEPLOY</span><br>
+        <strong>Cara Setup:</strong><br>
+        1. Ganti 10 email pengirim di file <code>api/send-email.js</code> (baris SENDER_ACCOUNTS)<br>
+        2. Ganti SMTP password dengan App Password dari Gmail<br>
+        3. Upload ke GitHub → Deploy ke Vercel → Selesai!
+    </div>
+</div>
+
+<script>
+    const API_URL = '/api/send-email';
+    let activeTimeouts = [];
+    let isSending = false;
+
+    function addLog(message, type = "info") {
+        const logDiv = document.getElementById('log');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString('id-ID');
+        entry.innerHTML = `[${time}] ${message}`;
+        if (type === "success") entry.style.color = "#9bffcf";
+        else if (type === "error") entry.style.color = "#ffafa3";
+        else entry.style.color = "#ffe2a4";
+        logDiv.appendChild(entry);
+        entry.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearLog() {
+        document.getElementById('log').innerHTML = '';
+    }
+
+    async function scheduleEmails() {
+        if (isSending) {
+            addLog("⏳ Pengiriman sedang berjalan, tunggu selesai!", "error");
+            return;
+        }
+
+        const targetEmail = document.getElementById('targetEmail').value.trim();
+        if (!targetEmail) {
+            addLog("❌ Email tujuan tidak boleh kosong!", "error");
+            return;
+        }
+
+        const subject = document.getElementById('subject').value.trim();
+        if (!subject) {
+            addLog("❌ Subject tidak boleh kosong!", "error");
+            return;
+        }
+
+        const message = document.getElementById('message').value.trim();
+        if (!message) {
+            addLog("❌ Isi email tidak boleh kosong!", "error");
+            return;
+        }
+
+        const totalDays = parseInt(document.getElementById('totalDays').value);
+        const cvFile = document.getElementById('cvFile').files[0];
+        
+        let cvBase64 = null;
+        let cvFilename = null;
+        
+        if (cvFile) {
+            const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            if (!allowed.includes(cvFile.type)) {
+                addLog("❌ Format CV tidak didukung! Gunakan PDF, DOC, DOCX", "error");
+                return;
+            }
+            
+            addLog("📎 Memproses file CV...", "info");
+            cvBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(cvFile);
+            });
+            cvFilename = cvFile.name;
+            addLog(`✅ CV siap: ${cvFilename}`, "success");
+        }
+
+        // Bersihkan timeout lama
+        for (let t of activeTimeouts) clearTimeout(t);
+        activeTimeouts = [];
+        clearLog();
+        
+        isSending = true;
+        const sendBtn = document.getElementById('sendBtn');
+        sendBtn.disabled = true;
+        sendBtn.textContent = "⏳ MENGIRIM...";
+        
+        const totalHours = totalDays * 24;
+        const gapMs = (totalHours * 60 * 60 * 1000) / 10;
+        const startDate = Date.now() + 3000;
+        
+        addLog(`🚀 MEMULAI 10 EMAIL ke ${targetEmail} dalam ${totalDays} hari`, "info");
+        addLog(`⏱️ Interval antar email: ~${(gapMs / 1000 / 60).toFixed(1)} menit`, "info");
+        
+        let successCount = 0;
+        let failCount = 0;
+        let completedCount = 0;
+
+        for (let i = 0; i < 10; i++) {
+            const delay = i * gapMs;
+            const scheduledTime = new Date(startDate + delay);
+            
+            const timeoutId = setTimeout(async () => {
+                addLog(`📤 [${i+1}/10] Mengirim email...`, "info");
+                
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            index: i,
+                            targetEmail: targetEmail,
+                            subject: subject,
+                            message: message,
+                            cvBase64: cvBase64,
+                            cvFilename: cvFilename
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        addLog(`✅ BERHASIL dari ${result.sender} → ${targetEmail}`, "success");
+                        successCount++;
+                    } else {
+                        addLog(`❌ GAGAL: ${result.error}`, "error");
+                        failCount++;
+                    }
+                } catch (err) {
+                    addLog(`❌ GAGAL: ${err.message}`, "error");
+                    failCount++;
+                }
+                
+                completedCount++;
+                if (completedCount === 10) {
+                    addLog(`🎉 SELESAI! Sukses: ${successCount}, Gagal: ${failCount}`, "info");
+                    isSending = false;
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = "🚀 KIRIM LAMARAN (EMAIL NYATA)";
+                }
+            }, delay);
+            
+            activeTimeouts.push(timeoutId);
+            addLog(`📅 Jadwal #${i+1} → ${scheduledTime.toLocaleString()}`, "info");
+        }
+    }
+
+    document.getElementById('sendBtn').onclick = scheduleEmails;
+</script>
+</body>
+</html>
