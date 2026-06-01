@@ -2,16 +2,16 @@ const nodemailer = require('nodemailer');
 
 // ========== GANTI DENGAN 10 EMAIL DAN APP PASSWORD ASLI ANDA ==========
 const SENDER_ACCOUNTS = [
-        { email: "rizkyramadhani060601@mail.com", password: "erye kpwt wwah cujm" },
-        { email: "fianajah080801@mail.com", password: "qsmd lfda fswn uewy" },
-        { email: "akuunn0033@mail.com", password: "rgvq ktuh pect mqnf" },
-        { email: "akuunn0044@mail.com", password: "bkpl hrel gnjl genb" },
-        { email: "akuunn0066@mail.com", password: "ofyx mstt jbai zaoy" },
-        { email: "akuunn100@mail.com", password: "vaaw mqkv leup tlst" },
-        { email: "lmgacor0066@mail.com", password: "prjm vsuv kvxq oskx" },
-        { email: "akuunn1001@mail.com", password: "vrng wowp cvxr zgxz" },
-        { email: "akuunn2001@mail.com", password: "qwvw ppmk qslk bcpi" },
-        { email: "rimada060606@mail.com", password: "jhzi cmyg euob gxtd" }
+        { email: "rizkyramadhani060601@mail.com", password: "eryekpwtwwahcujm" },
+        { email: "fianajah080801@mail.com", password: "qsmdlfdafswnuewy" },
+        { email: "akuunn0033@mail.com", password: "rgvqktuhpectmqnf" },
+        { email: "akuunn0044@mail.com", password: "bkplhrelgnjlgenb" },
+        { email: "akuunn0066@mail.com", password: "ofyxmsttjbaizaoy" },
+        { email: "akuunn100@mail.com", password: "vaawmqkvleuptlst" },
+        { email: "lmgacor0066@mail.com", password: "prjmvsuvkvxqoskx" },
+        { email: "akuunn1001@mail.com", password: "vrngwowpcvxrzgxz" },
+        { email: "akuunn2001@mail.com", password: "qwvwppmkqslkbcpi" },
+        { email: "rimada060606@mail.com", password: "jhzicmygeuobgxtd" }
 ];
 
 const getTransporter = (email, password) => {
