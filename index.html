@@ -15,16 +15,20 @@
         button { background: #1b6e5c; color: white; padding: 14px; border: none; border-radius: 30px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 16px; }
         button:hover { background: #0f5547; }
         button:disabled { background: #999; cursor: not-allowed; }
-        .log-area { background: #0a1e22; color: #9bffcf; padding: 16px; border-radius: 16px; height: 350px; overflow-y: auto; font-family: monospace; font-size: 12px; }
-        .log-entry { padding: 6px 0; border-bottom: 1px solid #2a4a52; }
+        .log-area { background: #0a1e22; color: #9bffcf; padding: 16px; border-radius: 16px; height: 400px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+        .log-entry { padding: 8px 0; border-bottom: 1px solid #2a4a52; }
         .info { background: #e0f0ec; padding: 12px; border-radius: 12px; margin: 16px 0; font-size: 13px; }
         .badge { background: #1e7a6e; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; display: inline-block; margin-bottom: 12px; }
+        .log-success { color: #9bffcf; }
+        .log-error { color: #ffafa3; }
+        .log-info { color: #ffe2a4; }
+        .counter-badge { background: #2a4a52; padding: 2px 8px; border-radius: 20px; font-size: 11px; margin-left: 8px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="card">
-        <h2>KIRIM LAMARAN MASAL</h2>
+        <h2>KIRIM MASAL</h2>
         <p>Mengirim email secara masal</p>
     </div>
 
@@ -32,14 +36,14 @@
         <label>📬 Email Tujuan (HRD)</label>
         <input type="email" id="targetEmail" placeholder="hrd@perusahaan.com">
         
-        <label>📎 Upload CV (PDF/DOC/DOCX)</label>
+        <label>📎 Upload CV</label>
         <input type="file" id="cvFile" accept=".pdf,.doc,.docx">
         
-        <label>📌 Subject / Posisi</label>
-        <input type="text" id="subject" placeholder="Lamaran Pekerjaan">
+        <label>📌 Posisi</label>
+        <input type="text" id="subject" placeholder="posisi">
         
         <label>📄 Isi Email</label>
-        <textarea id="message" rows="4" placeholder="Isi email lamaran...">Yth. HRD Manager
+        <textarea id="message" rows="4" placeholder="Isi email lamaran...">Kepada Yth. HRD Manager
 PT. NAMA PT
 Di Tempat
 
@@ -51,10 +55,9 @@ Besar harapan saya untuk bisa diterima dan bekerja di perusahaan yang Bapak/Ibu 
 
 Hormat saya
 
-Moch. Rizki Ramadhani
-</textarea>
+Moch. Rizki Ramadhani</textarea>
         
-        <label>🗓️ Kirim dalam berapa hari?</label>
+        <label>🗓️ Kirim email dalam berapa hari?</label>
         <select id="totalDays">
             <option value="1" selected>1 hari (24 jam)</option>
             <option value="2">2 hari (48 jam)</option>
@@ -84,7 +87,7 @@ Moch. Rizki Ramadhani
         else if (type === "error") entry.style.color = "#ffafa3";
         else entry.style.color = "#ffe2a4";
         logDiv.appendChild(entry);
-        entry.scrollIntoView({ behavior: 'smooth' });
+        entry.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function clearLog() {
@@ -128,16 +131,21 @@ Moch. Rizki Ramadhani
                 return;
             }
             
-            addLog("📎 Memproses file CV...", "info");
+            // Cek ukuran file (maks 5MB)
+            if (cvFile.size > 5 * 1024 * 1024) {
+                addLog(`❌ File CV terlalu besar (${(cvFile.size/1024/1024).toFixed(1)}MB). Maksimal 5MB`, "error");
+                return;
+            }
+            
             cvBase64 = await new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result.split(',')[1]);
                 reader.readAsDataURL(cvFile);
             });
             cvFilename = cvFile.name;
-            addLog(`✅ CV siap: ${cvFilename}`, "success");
         }
 
+        // Bersihkan timeout lama
         for (let t of activeTimeouts) clearTimeout(t);
         activeTimeouts = [];
         clearLog();
@@ -149,10 +157,7 @@ Moch. Rizki Ramadhani
         
         const totalHours = totalDays * 24;
         const gapMs = (totalHours * 60 * 60 * 1000) / 10;
-        const startDate = Date.now() + 3000;
         
-        addLog(`🚀 MEMULAI 10 EMAIL ke ${targetEmail} dalam ${totalDays} hari`, "info");
-        addLog(`⏱️ Interval antar email: ~${(gapMs / 1000 / 60).toFixed(1)} menit`, "info");
         
         let successCount = 0;
         let failCount = 0;
@@ -160,10 +165,9 @@ Moch. Rizki Ramadhani
 
         for (let i = 0; i < 10; i++) {
             const delay = i * gapMs;
-            const scheduledTime = new Date(startDate + delay);
             
             const timeoutId = setTimeout(async () => {
-                addLog(`📤 [${i+1}/10] Mengirim email...`, "info");
+                // Tampilkan status mengirim
                 
                 try {
                     const response = await fetch('/api/send-email', {
@@ -182,20 +186,32 @@ Moch. Rizki Ramadhani
                     const result = await response.json();
                     
                     if (result.success) {
-                        addLog(`✅ BERHASIL dari ${result.sender} → ${targetEmail}`, "success");
+                        // Format BERHASIL (1/10)
+                        addLog(`✅ BERHASIL (${i+1}/10)`, "success");
                         successCount++;
                     } else {
-                        addLog(`❌ GAGAL: ${result.error}`, "error");
+                        // Format GAGAL (3/10): pesan error
+                        let errorMsg = result.error || "Unknown error";
+                        // Persingkat pesan error jika terlalu panjang
+                        if (errorMsg.length > 80) {
+                            errorMsg = errorMsg.substring(0, 80) + "...";
+                        }
+                        addLog(`❌ GAGAL (${i+1}/10): ${errorMsg}`, "error");
                         failCount++;
                     }
                 } catch (err) {
-                    addLog(`❌ GAGAL: ${err.message}`, "error");
+                    // Format GAGAL (3/10): pesan error dari network
+                    let errorMsg = err.message || "Network error";
+                    if (errorMsg.length > 80) {
+                        errorMsg = errorMsg.substring(0, 80) + "...";
+                    }
+                    addLog(`❌ GAGAL (${i+1}/10): ${errorMsg}`, "error");
                     failCount++;
                 }
                 
                 completedCount++;
                 if (completedCount === 10) {
-                    addLog(`🎉 SELESAI! Sukses: ${successCount}, Gagal: ${failCount}`, "info");
+                    addLog(`🎉 SELESAI | ${successCount} BERHASIL | ${failCount} GAGAL`, "success");
                     isSending = false;
                     sendBtn.disabled = false;
                     sendBtn.textContent = "KIRIM";
@@ -203,7 +219,7 @@ Moch. Rizki Ramadhani
             }, delay);
             
             activeTimeouts.push(timeoutId);
-            addLog(`📅 Jadwal #${i+1} → ${scheduledTime.toLocaleString()}`, "info");
+            // Tampilkan jadwal
         }
     }
 
